@@ -1,0 +1,135 @@
+# -*- coding: utf-8 -*-
+
+import numpy as np
+
+import tensorflow as tf
+import gym
+import matplotlib.pyplot as plt
+
+
+
+
+################################
+x1 = np.arange(3)
+x2 = np.arange(4,7)
+aa = [1,2]
+bb = [3,4]
+#aa.append(x1)
+#bb.append(x2)
+ll1 = []
+ll1.append(aa)
+ll1.append(bb)
+
+#print ll1
+
+
+ar = np.vstack(ll1)
+#print ar
+
+#######################################
+
+
+
+
+#############################
+
+# ff = np.arange(2).reshape(1,2)
+# print ff
+# fff = np.argmax(ff)
+# print fff
+
+
+##############画图##############
+# list = []
+# for a in range(10):
+#     list.append(a)
+# plt.plot(list)
+# plt.show()
+
+
+###########################
+
+# a = np.arange(0,60,10).reshape((-1,1)) #+ np.arange(6)
+# b = np.arange(6)
+# c = a + b
+#
+# print 'a = ', a, 'b = ', b,'\n','c = \n', c
+#
+# d = c.reshape(3,-1)
+#
+# print 'd = \n', d
+#
+# d[0][10] = 100
+# print 'c = \n', c
+# print 'd = \n', d
+#
+# print type(a),'\n'
+# print type(b), '\n', \
+# a.dtype
+#######################################################
+
+a = np.random.rand(6)
+b = a[a>0.5]
+a[a>0.5] = 0.5
+# print a
+# print b
+###############################################
+#深拷贝()
+# input_dim = 4
+# H = 4
+# output_dim = 2
+#
+#
+# W1 = tf.Variable(tf.ones([input_dim,H]), tf.float64)
+# b1 = tf.Variable(tf.zeros([H]), tf.float64)
+# W2 = tf.Variable(tf.ones([H,output_dim]), tf.float64)
+# b2 = tf.Variable(tf.zeros([output_dim]), tf.float64)
+# s = tf.placeholder(tf.float32, [None,input_dim])
+# h_layer = tf.nn.relu(tf.matmul(s,W1) + b1)
+# q_value = tf.matmul(h_layer, W2) + b2
+# weight = [W1,b1,W2,b2]
+# # paramaters for calculating target values
+#
+#
+# with tf.Session() as sess:
+#     sess.run(tf.initialize_all_variables())
+#     # print 'W1:\n', sess.run(weight)
+#     target_weight = sess.run(weight)
+#     print 'The target weight is:', target_weight
+#     for i in range(4):
+#         target_weight[i] += 1
+#     print 'The target weight is: ', target_weight
+#     feed_dict = {s:[[1,2,3,4]]}
+#     temp = zip(weight,target_weight)
+#     print 'The 1st element of temp is: ', temp[0]
+#     feed_dict.update(temp)
+#     print 'The feed_dict is ', feed_dict
+#     q = sess.run(q_value, feed_dict = feed_dict)
+#     print 'The q value is: ', q
+
+
+# dictionaryk update
+# keys = [1,2,3]
+# values = [2,3,4]
+# dictionary = {'i' : 90}
+# print dictionary
+# dictionary.update(zip(keys,values))
+# print 'dictionary is: ', dictionaryh
+
+
+######################gym_upload####\
+import gym
+from gym import wrappers
+
+env = gym.make("FrozenLake-v0")
+env = wrappers.Monitor(env, "/tmp/gym-results",force=True)
+observation = env.reset()
+for _ in range(1000):
+    env.render()
+    action = env.action_space.sample()  # your agent here (this takes random actions)
+    observation, reward, done, info = env.step(action)
+    if done:
+        env.reset()
+
+env.close()
+gym.upload("/tmp/gym-results", api_key="sk_X8YI3v5xSVeqhMcGVUAYLw")
