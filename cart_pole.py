@@ -30,8 +30,10 @@ total_step = 0
 Replay_list = [] #store every s_t, a_t, r_t,1 s_t+1 tuple
 discount = 0.9
 epsiron = INITIAL_EPSILON
-loss_list = [] # For plotting loss
+loss_list = [] # For plotting traing loss curve
 episode_list = [] #For plotting loss
+temp_list = [] #restore 1000 step loss list
+loss_list_test = [] # Plotting test loss curve
 
 
 # feed forward graph construction
@@ -43,6 +45,12 @@ s = tf.placeholder(tf.float32, [None,input_dim])
 h_layer = tf.nn.relu(tf.matmul(s,W1) + b1)
 q_value = tf.matmul(h_layer, W2) + b2
 
+
+
+# test virables
+yy = tf.placeholder(tf.float32) #restore y value for test
+q_y = tf.placeholder(tf.float32) #restore q action value for test
+loss_test = tf.reduce_mean(tf.square(yy - q_y))
 
 #training graph construction
 y = tf.placeholder(tf.float32, [None])
@@ -129,6 +137,8 @@ with tf.Session() as sess:
                 for i in range(BATCH_SIZE):
                     if batch_done[i][0]:
                         y_list.append(batch_r[i][0])
+                        # debug for a large minus reward for the last state
+                        # y_list.append(-10)
                     else:
                         # if not the final state, y_i plus discouted max qvalue_t+1
                         y_list.append(batch_r[i][0]+ discount * np.max(Q_targt[i]))
@@ -136,11 +146,13 @@ with tf.Session() as sess:
 
                 sess.run(train, feed_dict = {y:y_array, s:batch_s, action:batch_a})
                 #print(sess.run(loss, feed_dict = {y:y_array, s:batch_s, action:batch_a}))
-                #record the loss to plot per 100 step
-                if total_step % 100 == 0:
-                    debug_loss = sess.run(loss, feed_dict={y: y_array, s: batch_s, action: batch_a})
-                    print debug_loss
-                    loss_list.append(debug_loss)
+                #record the mean loss to plot every 1000 steps
+                temp_list.append(sess.run(loss, feed_dict={y: y_array, s: batch_s, action: batch_a}))
+                if total_step % 1000 == 0:
+                    mean_loss = np.mean(temp_list)
+                    print 'The mean TRAINING loss of %d ~ %d steps is: %f \n ' %(total_step, total_step+1000, mean_loss)
+                    loss_list.append(mean_loss)
+                    temp_list = []
 
             cur_obsv = next_obsv
             if done:
@@ -148,25 +160,44 @@ with tf.Session() as sess:
 
 
         #test
+        # restore test loss list value
+
         if episode % 100 == 0:
+            temp_list_test = []
+            total_step_test = 0
             total_reward = 0
-            total_q = 0
             for i in range(TEST):
                 test_obsv = env.reset()
                 for j in range(STEP_WIN):
+                    total_step_test += 1
                     env.render()
                     test_obsv_t = test_obsv.reshape(1, input_dim)
                     test_q = sess.run(q_value, feed_dict = {s: test_obsv_t})[0]
                     test_action = np.argmax(test_q)
                     test_obsv, test_reward, test_done, info = env.step(test_action) # put the next observation to test_obsv_t directly
                     total_reward += test_reward
-                    total_q += np.max(test_q)
+
+                    test_obsv_t_1 = test_obsv.reshape(1, input_dim)
+                    test_q_next = sess.run(q_value, feed_dict = {s:test_obsv_t_1})[0]
+
+                    if test_done:
+                        y_test = test_reward
+                    else:
+                        y_test = test_reward + discount * np.max(test_q_next)
+
+                    max_test_q = np.max(test_q)
+                    temp_list_test.append(sess.run(loss_test, feed_dict={yy: y_test, q_y: max_test_q}))
+                    # record loss value every 100 step
+                    if total_step_test % 100 == 0:
+                        mean_loss_test = np.mean(temp_list_test)
+                        print 'The mean TEST loss of %d ~ %d is %f \n' %(total_step_test, total_step_test+100, mean_loss_test)
+                        loss_list_test.append(mean_loss_test)
+
 
                     if test_done:
                         break
 
             avg_reward = total_reward / TEST
-            avg_q = total_q / TEST
             print 'episode: ', episode, 'Evaluation Average Reward:', avg_reward
             # print 'episode: ', episode, 'Evaluation Average QValue:', avg_q, '!!!!!!!!!'
             if avg_reward >= 200:
@@ -175,6 +206,10 @@ with tf.Session() as sess:
 env.close()
 gym.upload('/tmp/cartpole-experiment-1', api_key='sk_X8YI3v5xSVeqhMcGVUAYLw')
 # plot the loss curves
-plt.plot(loss_list)
+plt.plot(loss_list,"g-")
 plt.ylabel('Loss')
+# plt.show()
+
+# plotting test loss curve
+plt.plot(loss_list_test, "r-",landwidth = 2)
 plt.show()
