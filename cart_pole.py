@@ -197,6 +197,7 @@ with tf.Session() as sess:
                     if test_done:
                         break
 
+
             avg_reward = total_reward / TEST
             print 'episode: ', episode, 'Evaluation Average Reward:', avg_reward
             # print 'episode: ', episode, 'Evaluation Average QValue:', avg_q, '!!!!!!!!!'
