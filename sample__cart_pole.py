@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+#一个韩国人的程序，反向传播代码有逻辑错误（2017.7.7）
 import tensorflow as tf
 import gym
 import numpy as np
